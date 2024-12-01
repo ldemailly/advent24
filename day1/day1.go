@@ -23,6 +23,11 @@ func main() {
 	if len(l1) != len(l2) {
 		panic("Lists are not of the same length")
 	}
+	Part1(l1, l2)
+	Part2(l1, l2)
+}
+
+func Part1(l1, l2 []int) {
 	slices.Sort(l1)
 	slices.Sort(l2)
 	sum := 0
@@ -58,4 +63,26 @@ func readInput() ([]int, []int) {
 		l2 = append(l2, n2)
 	}
 	return l1, l2
+}
+
+func count(m map[int]int, v int) {
+	m[v]++
+}
+
+func Part2(l1, l2 []int) {
+	map1 := make(map[int]int, len(l1))
+	map2 := make(map[int]int, len(l2))
+	for i := range l1 {
+		count(map1, l1[i])
+		count(map2, l2[i])
+	}
+	var sum int64
+	for k, v1 := range map1 {
+		v2, ok := map2[k]
+		if !ok {
+			continue
+		}
+		sum += int64(k) * int64(v1) * int64(v2)
+	}
+	fmt.Println(sum)
 }
