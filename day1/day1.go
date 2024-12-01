@@ -65,16 +65,12 @@ func readInput() ([]int, []int) {
 	return l1, l2
 }
 
-func count(m map[int]int, v int) {
-	m[v]++
-}
-
 func Part2(l1, l2 []int) {
 	map1 := make(map[int]int, len(l1))
 	map2 := make(map[int]int, len(l2))
 	for i := range l1 {
-		count(map1, l1[i])
-		count(map2, l2[i])
+		map1[l1[i]]++
+		map2[l2[i]]++
 	}
 	var sum int64
 	for k, v1 := range map1 {
