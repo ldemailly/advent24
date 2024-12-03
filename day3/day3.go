@@ -15,25 +15,26 @@ func main() {
 		panic(err)
 	}
 	dataStr := string(data)
-	Mul(dataStr)
+	fmt.Println(Mul(dataStr))
 
 	// Part 2
+	sum := 0
 	for {
 		idx1 := strings.Index(dataStr, "don't()")
+		sum += Mul(dataStr[:idx1])
 		if idx1 == -1 {
 			break
 		}
 		idx2 := strings.Index(dataStr[idx1:], "do()")
 		if idx2 == -1 {
-			dataStr = dataStr[:idx1]
 			break
 		}
-		dataStr = dataStr[:idx1] + dataStr[idx1+idx2+4:]
+		dataStr = dataStr[idx1+idx2+4:]
 	}
-	Mul(dataStr)
+	fmt.Println(sum)
 }
 
-func Mul(data string) {
+func Mul(data string) int {
 	re := regexp.MustCompile(`mul\(([0-9]+),([0-9]+)\)`)
 	res := re.FindAllStringSubmatch(data, -1)
 	sum := 0
@@ -49,5 +50,5 @@ func Mul(data string) {
 		}
 		sum += x * y
 	}
-	fmt.Println(sum)
+	return sum
 }
