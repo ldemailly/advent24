@@ -1,4 +1,4 @@
-// Day one of advent of code 2024
+// Day 2 of advent of code 2024
 // https://adventofcode.com/2024/day/2
 
 package main
