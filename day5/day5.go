@@ -16,8 +16,9 @@ type Rule struct {
 }
 
 type Data struct {
-	Row []int // raw row
-	Set sets.Set[int]
+	Row    []int // raw row
+	Set    sets.Set[int]
+	Middle int
 }
 
 func main() {
@@ -51,11 +52,13 @@ func main() {
 			row.Row = append(row.Row, v)
 		}
 		row.Set = sets.FromSlice(row.Row)
+		row.Middle = row.Row[len(row.Row)/2]
 		data = append(data, row)
 	}
 	// fmt.Println(data)
 
 	// Part 1
+	sum := 0
 	for i, row := range data {
 		rowOk := true
 		for j, r := range rules {
@@ -72,7 +75,9 @@ func main() {
 			}
 		}
 		if rowOk {
-			fmt.Printf("Row %d is ok: %v\n", i+1, row.Row)
+			fmt.Printf("Row %d is ok, adding %d: %v\n", i+1, row.Middle, row.Row)
+			sum += row.Middle
 		}
 	}
+	fmt.Println(sum)
 }
