@@ -91,10 +91,11 @@ func main() {
 	fmt.Println(sum1)
 	sum2 := 0
 	for i, row := range badRows {
-	recheck:
-		didFix := false
-		for j, r := range rules {
-			if !(row.Set.Has(r.Before) && row.Set.Has(r.After)) {
+		for j := 0; j < len(rules); j++ {
+			// log.Printf("Checking row %d with rule %d", i+1, j+1)
+			didFix := false
+			r := rules[j]
+			if !row.Set.Has(r.Before) || !row.Set.Has(r.After) {
 				continue
 			}
 			for {
@@ -112,11 +113,11 @@ func main() {
 				fmt.Printf("now %v\n", row.Row)
 				didFix = true
 			}
-		}
-		if didFix {
-			// extra pass to recheck
-			fmt.Printf("Rechecking %d as we made changes\n", i+1)
-			goto recheck
+			if didFix {
+				// recheck from the start
+				fmt.Printf("Rechecking %d from 0 as rule %d made changes\n", i+1, j+1)
+				j = -1 // will be incremented to 0
+			}
 		}
 		sum2 += row.Middle()
 	}
