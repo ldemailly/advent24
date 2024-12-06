@@ -42,18 +42,28 @@ func (g *Guard) Move(backward bool) {
 	}
 }
 
+const (
+	GreenBackground = "\033[42m"
+	// copied from 	fortio.org/terminal/ansipixels
+	Reset     = "\033[0m"
+	Green     = "\033[32m"
+	FullPixel = '█'
+	BluePixel = "\033[34m" + string(FullPixel) + Reset
+	RedPixel  = "\033[31m" + string(FullPixel) + Reset
+)
+
 func (g Guard) Print() string {
 	switch g.direction {
 	case north:
-		return "⇑"
+		return GreenBackground + "⇑" + Reset
 	case east:
-		return "⇒"
+		return GreenBackground + "⇒" + Reset
 	case south:
-		return "⇓"
+		return GreenBackground + "⇓" + Reset
 	case west:
-		return "⇐"
+		return GreenBackground + "⇐" + Reset
 	default:
-		return "?"
+		panic("Invalid direction")
 	}
 }
 
@@ -65,13 +75,14 @@ const (
 
 // happens to be square
 type Map struct {
-	m       [][]int
-	l       int
-	visited int
-	startX  int
-	startY  int
-	steps   int
-	loop    bool
+	m          [][]int
+	l          int
+	visited    int
+	startX     int
+	startY     int
+	steps      int
+	loop       bool
+	newX, newY int
 }
 
 func (m *Map) Outside(g *Guard) bool {
@@ -101,19 +112,34 @@ func (m *Map) Next(g *Guard) bool {
 	return true
 }
 
+func (m *Map) SetNew(x, y int) {
+	m.newX = x
+	m.newY = y
+	m.m[y][x] = obstacle
+}
+
 func (m *Map) Print(g Guard) string {
 	var b strings.Builder
+	b.WriteString("\033[H")
 	for y := 0; y < m.l; y++ {
 		for x := 0; x < m.l; x++ {
 			if g.x == x && g.y == y {
 				b.WriteString(g.Print())
 				continue
 			}
+			if x == m.startX && y == m.startY {
+				b.WriteString(Green + "↑" + Reset)
+				continue
+			}
 			switch m.m[y][x] {
 			case empty:
-				b.WriteString(".")
+				b.WriteRune(FullPixel)
 			case obstacle:
-				b.WriteString("#")
+				if x == m.newX && y == m.newY {
+					b.WriteString(BluePixel)
+				} else {
+					b.WriteString(RedPixel)
+				}
 			case visited + north:
 				b.WriteString("↑")
 			case visited + east:
@@ -188,11 +214,11 @@ func main() {
 	initialGuard := guard
 	m.startX = guard.x
 	m.startY = guard.y
-	// fmt.Println(m.Print(guard))
+	fmt.Println(m.Print(guard))
 	for m.Next(&guard) {
-		// fmt.Println(m.Print(guard))
+		fmt.Println(m.Print(guard))
 	}
-	// fmt.Println(m.Print(guard))
+	fmt.Println(m.Print(guard))
 	fmt.Println(m.visited)
 	loops := 0
 	for y := 0; y < m.l; y++ {
@@ -202,13 +228,13 @@ func main() {
 			}
 			if m.m[y][x] >= visited {
 				m2 := m.CleanClone()
-				m2.m[y][x] = obstacle
+				m2.SetNew(x, y)
 				guard = initialGuard
 				for m2.Next(&guard) {
 				}
 				if m2.loop {
-					// fmt.Println("Loop by adding obstacle at", x, y)
-					// fmt.Println(m2.Print(guard))
+					fmt.Println("Loop by adding obstacle at", x, y)
+					fmt.Println(m2.Print(guard))
 					loops++
 				}
 			}
