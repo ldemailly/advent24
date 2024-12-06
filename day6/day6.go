@@ -240,7 +240,7 @@ func main() {
 	}
 	m.MayPrint(guard, 5, "Initial, guard at", guard.x, guard.y)
 	for m.Next(&guard) {
-		m.MayPrint(guard, 1, "Guard at", guard.x, guard.y, ClearEndOfLine)
+		m.MayPrint(guard, 1, "Guard at", guard.x, guard.y, guard.Print(), ClearEndOfLine)
 	}
 	part1 := m.visited
 	m.MayPrint(guard, 5, "Done after", m.steps, "steps:", part1, ClearEndOfLine)
