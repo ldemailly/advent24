@@ -59,14 +59,19 @@ func (g Guard) Print() string {
 
 const (
 	empty = iota
-	visited
 	obstacle
+	visited
 )
 
 // happens to be square
 type Map struct {
-	m [][]int
-	l int
+	m       [][]int
+	l       int
+	visited int
+	startX  int
+	startY  int
+	steps   int
+	loop    bool
 }
 
 func (m *Map) Outside(g *Guard) bool {
@@ -74,6 +79,15 @@ func (m *Map) Outside(g *Guard) bool {
 }
 
 func (m *Map) Next(g *Guard) bool {
+	m.steps++
+	if m.m[g.y][g.x] == empty {
+		m.visited++
+	} else {
+		if m.steps > m.l*m.l {
+			m.loop = true
+			return false
+		}
+	}
 	m.m[g.y][g.x] = visited
 	g.Move(false)
 	if m.Outside(g) {
@@ -97,15 +111,40 @@ func (m *Map) Print(g Guard) string {
 			switch m.m[y][x] {
 			case empty:
 				b.WriteString(".")
-			case visited:
-				b.WriteString("*")
 			case obstacle:
 				b.WriteString("#")
+			case visited:
+				b.WriteString("*")
+			default:
+				log.Fatalf("Invalid state %q at %d,%d", m.m[y][x], x, y)
 			}
 		}
 		b.WriteString("\n")
 	}
 	return b.String()
+}
+
+// copy without visited
+func (m *Map) CleanClone() Map {
+	var m2 Map
+	m2.l = m.l
+	m2.startX = m.startX
+	m2.startY = m.startY
+	m2.steps = 0
+	m2.visited = 0
+	m2.loop = false
+	for y := 0; y < m.l; y++ {
+		var row []int
+		for x := 0; x < m.l; x++ {
+			v := m.m[y][x]
+			if v != obstacle {
+				v = empty
+			}
+			row = append(row, v)
+		}
+		m2.m = append(m2.m, row)
+	}
+	return m2
 }
 
 func main() {
@@ -139,21 +178,31 @@ func main() {
 	if len(m.m[0]) != m.l {
 		log.Fatalf("Invalid matrix %d vs %d", len(m.m[0]), m.l)
 	}
-	done := false
-	for {
-		fmt.Println(m.Print(guard))
-		if done {
-			break
-		}
-		done = !m.Next(&guard)
+	initialGuard := guard
+	m.startX = guard.x
+	m.startY = guard.y
+	for m.Next(&guard) {
 	}
-	count := 0
+	fmt.Println(m.Print(guard))
+	fmt.Println(m.visited)
+	loops := 0
 	for y := 0; y < m.l; y++ {
 		for x := 0; x < m.l; x++ {
+			if x == m.startX && y == m.startY {
+				continue
+			}
 			if m.m[y][x] == visited {
-				count++
+				m2 := m.CleanClone()
+				m2.m[y][x] = obstacle
+				guard = initialGuard
+				for m2.Next(&guard) {
+				}
+				if m2.loop {
+					fmt.Println("Loop by adding obstacle at", x, y)
+					loops++
+				}
 			}
 		}
 	}
-	fmt.Println(count)
+	fmt.Println(loops)
 }
