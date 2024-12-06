@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -166,8 +167,9 @@ func (m *Map) CleanClone() Map {
 	m2.steps = 0
 	m2.visited = 0
 	m2.loop = false
+	m2.m = make([][]int, 0, m.l)
 	for y := 0; y < m.l; y++ {
-		var row []int
+		row := make([]int, 0, m.l)
 		for x := 0; x < m.l; x++ {
 			v := m.m[y][x]
 			if v != obstacle {
@@ -180,7 +182,17 @@ func (m *Map) CleanClone() Map {
 	return m2
 }
 
+var doPrint = true
+
+func (m *Map) MayPrint(g Guard) {
+	if doPrint {
+		fmt.Println(m.Print(g))
+	}
+}
+
 func main() {
+	flag.BoolVar(&doPrint, "print", false, "Print the map")
+	flag.Parse()
 	s := bufio.NewScanner(os.Stdin)
 	var m Map
 	var guard Guard
@@ -214,11 +226,11 @@ func main() {
 	initialGuard := guard
 	m.startX = guard.x
 	m.startY = guard.y
-	fmt.Println(m.Print(guard))
+	m.MayPrint(guard)
 	for m.Next(&guard) {
-		fmt.Println(m.Print(guard))
+		m.MayPrint(guard)
 	}
-	fmt.Println(m.Print(guard))
+	m.MayPrint(guard)
 	fmt.Println(m.visited)
 	loops := 0
 	for y := 0; y < m.l; y++ {
@@ -233,8 +245,10 @@ func main() {
 				for m2.Next(&guard) {
 				}
 				if m2.loop {
-					fmt.Println("Loop by adding obstacle at", x, y)
-					fmt.Println(m2.Print(guard))
+					if doPrint {
+						fmt.Println("Loop by adding obstacle at", x, y)
+					}
+					m2.MayPrint(guard)
 					loops++
 				}
 			}
