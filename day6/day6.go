@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
@@ -183,15 +184,21 @@ func (m *Map) CleanClone() Map {
 }
 
 var doPrint = true
+var slow time.Duration
 
-func (m *Map) MayPrint(g Guard) {
+func (m *Map) MayPrint(g Guard, slowMult int, msg ...interface{}) {
 	if doPrint {
 		fmt.Print(m.Print(g))
+		if len(msg) > 0 {
+			fmt.Println(msg...)
+		}
+		time.Sleep(time.Duration(slowMult) * slow)
 	}
 }
 
 func main() {
 	flag.BoolVar(&doPrint, "print", false, "Print the map")
+	flag.DurationVar(&slow, "delay", 0, "Slow down the output by this amount")
 	flag.Parse()
 	s := bufio.NewScanner(os.Stdin)
 	var m Map
@@ -225,11 +232,11 @@ func main() {
 	initialGuard := guard
 	m.startX = guard.x
 	m.startY = guard.y
-	m.MayPrint(guard)
+	m.MayPrint(guard, 5)
 	for m.Next(&guard) {
-		m.MayPrint(guard)
+		m.MayPrint(guard, 1)
 	}
-	m.MayPrint(guard)
+	m.MayPrint(guard, 3)
 	part1 := m.visited
 	loops := 0
 	for y := 0; y < m.l; y++ {
@@ -244,10 +251,7 @@ func main() {
 				for m2.Next(&guard) {
 				}
 				if m2.loop {
-					m2.MayPrint(guard)
-					if doPrint {
-						fmt.Println("Loop by adding obstacle at", x, y)
-					}
+					m2.MayPrint(guard, 5, "Loop by adding obstacle at", x, y)
 					loops++
 				}
 			}
