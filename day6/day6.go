@@ -46,7 +46,7 @@ func (g *Guard) Move(backward bool) {
 
 const (
 	GreenBackground = "\033[42m"
-	// copied from 	fortio.org/terminal/ansipixels
+	// copied from my https://pkg.go.dev/fortio.org/terminal/ansipixels
 	Reset     = "\033[0m"
 	Green     = "\033[32m"
 	FullPixel = '█'
