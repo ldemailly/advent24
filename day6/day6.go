@@ -47,11 +47,13 @@ func (g *Guard) Move(backward bool) {
 const (
 	GreenBackground = "\033[42m"
 	// copied from my https://pkg.go.dev/fortio.org/terminal/ansipixels
-	Reset     = "\033[0m"
-	Green     = "\033[32m"
-	FullPixel = '█'
-	BluePixel = "\033[34m" + string(FullPixel) + Reset
-	RedPixel  = "\033[31m" + string(FullPixel) + Reset
+	Reset          = "\033[0m"
+	Green          = "\033[32m"
+	FullPixel      = '█'
+	BluePixel      = "\033[34m" + string(FullPixel) + Reset
+	RedPixel       = "\033[31m" + string(FullPixel) + Reset
+	ClearScreen    = "\033[2J"
+	ClearEndOfLine = "\033[K"
 )
 
 func (g Guard) Print() string {
@@ -232,12 +234,16 @@ func main() {
 	initialGuard := guard
 	m.startX = guard.x
 	m.startY = guard.y
-	m.MayPrint(guard, 5)
-	for m.Next(&guard) {
-		m.MayPrint(guard, 1)
+	if doPrint {
+		// clear screen
+		fmt.Print(ClearScreen)
 	}
-	m.MayPrint(guard, 3)
+	m.MayPrint(guard, 5, "Initial, guard at", guard.x, guard.y)
+	for m.Next(&guard) {
+		m.MayPrint(guard, 1, "Guard at", guard.x, guard.y, ClearEndOfLine)
+	}
 	part1 := m.visited
+	m.MayPrint(guard, 5, "Done after", m.steps, "steps:", part1, ClearEndOfLine)
 	loops := 0
 	for y := 0; y < m.l; y++ {
 		for x := 0; x < m.l; x++ {
@@ -251,8 +257,8 @@ func main() {
 				for m2.Next(&guard) {
 				}
 				if m2.loop {
-					m2.MayPrint(guard, 5, "Loop by adding obstacle at", x, y)
 					loops++
+					m2.MayPrint(guard, 5, "Loop", loops, "adding obstacle at", x, y)
 				}
 			}
 		}
