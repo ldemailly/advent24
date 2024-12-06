@@ -45,13 +45,13 @@ func (g *Guard) Move(backward bool) {
 func (g Guard) Print() string {
 	switch g.direction {
 	case north:
-		return "^"
+		return "⇑"
 	case east:
-		return ">"
+		return "⇒"
 	case south:
-		return "v"
+		return "⇓"
 	case west:
-		return "<"
+		return "⇐"
 	default:
 		return "?"
 	}
@@ -60,7 +60,7 @@ func (g Guard) Print() string {
 const (
 	empty = iota
 	obstacle
-	visited
+	visited // + direction
 )
 
 // happens to be square
@@ -82,13 +82,14 @@ func (m *Map) Next(g *Guard) bool {
 	m.steps++
 	if m.m[g.y][g.x] == empty {
 		m.visited++
+		m.m[g.y][g.x] = visited + g.direction
 	} else {
-		if m.steps > m.l*m.l {
+		if m.m[g.y][g.x] == visited+g.direction {
+			// fmt.Println("Loop at", g.x, g.y, "after", m.steps, "steps")
 			m.loop = true
 			return false
 		}
 	}
-	m.m[g.y][g.x] = visited
 	g.Move(false)
 	if m.Outside(g) {
 		return false // done
@@ -113,8 +114,14 @@ func (m *Map) Print(g Guard) string {
 				b.WriteString(".")
 			case obstacle:
 				b.WriteString("#")
-			case visited:
-				b.WriteString("*")
+			case visited + north:
+				b.WriteString("↑")
+			case visited + east:
+				b.WriteString("→")
+			case visited + south:
+				b.WriteString("↓")
+			case visited + west:
+				b.WriteString("←")
 			default:
 				log.Fatalf("Invalid state %q at %d,%d", m.m[y][x], x, y)
 			}
@@ -181,9 +188,11 @@ func main() {
 	initialGuard := guard
 	m.startX = guard.x
 	m.startY = guard.y
+	// fmt.Println(m.Print(guard))
 	for m.Next(&guard) {
+		// fmt.Println(m.Print(guard))
 	}
-	fmt.Println(m.Print(guard))
+	// fmt.Println(m.Print(guard))
 	fmt.Println(m.visited)
 	loops := 0
 	for y := 0; y < m.l; y++ {
@@ -191,14 +200,15 @@ func main() {
 			if x == m.startX && y == m.startY {
 				continue
 			}
-			if m.m[y][x] == visited {
+			if m.m[y][x] >= visited {
 				m2 := m.CleanClone()
 				m2.m[y][x] = obstacle
 				guard = initialGuard
 				for m2.Next(&guard) {
 				}
 				if m2.loop {
-					fmt.Println("Loop by adding obstacle at", x, y)
+					// fmt.Println("Loop by adding obstacle at", x, y)
+					// fmt.Println(m2.Print(guard))
 					loops++
 				}
 			}
