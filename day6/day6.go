@@ -186,7 +186,7 @@ var doPrint = true
 
 func (m *Map) MayPrint(g Guard) {
 	if doPrint {
-		fmt.Println(m.Print(g))
+		fmt.Print(m.Print(g))
 	}
 }
 
@@ -211,7 +211,6 @@ func main() {
 				row = append(row, empty)
 				guard.x = x
 				guard.y = y
-				fmt.Println("Guard at", x, y)
 			default:
 				log.Fatalf("Invalid char %q", e)
 			}
@@ -231,7 +230,7 @@ func main() {
 		m.MayPrint(guard)
 	}
 	m.MayPrint(guard)
-	fmt.Println(m.visited)
+	part1 := m.visited
 	loops := 0
 	for y := 0; y < m.l; y++ {
 		for x := 0; x < m.l; x++ {
@@ -245,14 +244,15 @@ func main() {
 				for m2.Next(&guard) {
 				}
 				if m2.loop {
+					m2.MayPrint(guard)
 					if doPrint {
 						fmt.Println("Loop by adding obstacle at", x, y)
 					}
-					m2.MayPrint(guard)
 					loops++
 				}
 			}
 		}
 	}
-	fmt.Println(loops)
+	fmt.Println("Part 1:", part1)
+	fmt.Println("Part 2:", loops)
 }
