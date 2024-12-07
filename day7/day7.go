@@ -43,7 +43,7 @@ func main() {
 	var sum int64
 	for _, eq := range eqs {
 		if evalPart1(eq) {
-			fmt.Println("Found", eq)
+			// fmt.Println("Found", eq)
 			sum += int64(eq.result)
 		}
 	}
@@ -51,7 +51,7 @@ func main() {
 	sum = 0
 	for _, eq := range eqs {
 		if evalPart2(eq) {
-			fmt.Println("Found", eq)
+			// fmt.Println("Found", eq)
 			sum += int64(eq.result)
 		}
 	}
