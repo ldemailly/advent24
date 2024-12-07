@@ -109,11 +109,36 @@ func TryTimes2(operands []int, acc, target int) bool {
 
 func TryConcat(operands []int, acc, target int) bool {
 	// fmt.Printf("TryConcat(%v, %d, %d)", operands, acc, target)
-	numDigits := int(math.Floor(math.Log10(float64(operands[0]))) + 1)
-	acc = acc*int(math.Pow10(numDigits)) + operands[0]
+	acc = IntConcat2(acc, operands[0])
 	// fmt.Printf(" -> %d\n", acc)
 	if len(operands) == 1 {
 		return acc == target
 	}
 	return TryPlus2(operands[1:], acc, target) || TryTimes2(operands[1:], acc, target) || TryConcat(operands[1:], acc, target)
+}
+
+// initial float math version:
+func IntConcat1(a, b int) int {
+	numDigits := int(math.Floor(math.Log10(float64(b))) + 1)
+	return a*int(math.Pow10(numDigits)) + b
+}
+
+// Pure integer version:
+func IntConcat2(a, b int) int {
+	// Calculate the number of digits in `b`
+	digits := 1
+	temp := b
+	for temp >= 10 {
+		temp /= 10
+		digits++
+	}
+
+	// Calculate the factor (10^digits) to shift `a` appropriately
+	factor := 1
+	for i := 0; i < digits; i++ {
+		factor *= 10
+	}
+
+	// Concatenate a and b
+	return a*factor + b
 }
