@@ -125,20 +125,9 @@ func IntConcat1(a, b int) int {
 
 // Pure integer version:
 func IntConcat2(a, b int) int {
-	// Calculate the number of digits in `b`
-	digits := 1
-	temp := b
-	for temp >= 10 {
-		temp /= 10
-		digits++
+	var big = 1
+	for b >= big {
+		big *= 10
 	}
-
-	// Calculate the factor (10^digits) to shift `a` appropriately
-	factor := 1
-	for i := 0; i < digits; i++ {
-		factor *= 10
-	}
-
-	// Concatenate a and b
-	return a*factor + b
+	return (a * big) + b
 }
