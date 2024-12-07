@@ -39,5 +39,35 @@ func main() {
 		}
 		eqs = append(eqs, eq)
 	}
-	fmt.Println(eqs)
+	var sum int64
+	for _, eq := range eqs {
+		if eval(eq) {
+			fmt.Println("Found", eq)
+			sum += int64(eq.result)
+		}
+	}
+	fmt.Printf("Sum: %d\n", sum)
+}
+
+func eval(eq Eq) bool {
+	return TryPlus(eq.operands[1:], eq.operands[0], eq.result) ||
+		TryTimes(eq.operands[1:], eq.operands[0], eq.result)
+}
+
+func TryPlus(operands []int, acc, target int) bool {
+	// fmt.Printf("TryPlus(%v, %d, %d)\n", operands, acc, target)
+	if len(operands) == 0 {
+		return acc == target
+	}
+	acc += operands[0]
+	return TryPlus(operands[1:], acc, target) || TryTimes(operands[1:], acc, target)
+}
+
+func TryTimes(operands []int, acc, target int) bool {
+	// fmt.Printf("TryPlus(%v, %d, %d)\n", operands, acc, target)
+	if len(operands) == 0 {
+		return acc == target
+	}
+	acc *= operands[0]
+	return TryPlus(operands[1:], acc, target) || TryTimes(operands[1:], acc, target)
 }
