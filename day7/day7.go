@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -41,33 +42,78 @@ func main() {
 	}
 	var sum int64
 	for _, eq := range eqs {
-		if eval(eq) {
+		if evalPart1(eq) {
 			fmt.Println("Found", eq)
 			sum += int64(eq.result)
 		}
 	}
-	fmt.Printf("Sum: %d\n", sum)
+	fmt.Println("Part1:", sum)
+	sum = 0
+	for _, eq := range eqs {
+		if evalPart2(eq) {
+			fmt.Println("Found", eq)
+			sum += int64(eq.result)
+		}
+	}
+	fmt.Println("Part2:", sum)
 }
 
-func eval(eq Eq) bool {
-	return TryPlus(eq.operands[1:], eq.operands[0], eq.result) ||
-		TryTimes(eq.operands[1:], eq.operands[0], eq.result)
+func evalPart1(eq Eq) bool {
+	return TryPlus1(eq.operands[1:], eq.operands[0], eq.result) ||
+		TryTimes1(eq.operands[1:], eq.operands[0], eq.result)
 }
 
-func TryPlus(operands []int, acc, target int) bool {
+func TryPlus1(operands []int, acc, target int) bool {
 	// fmt.Printf("TryPlus(%v, %d, %d)\n", operands, acc, target)
 	if len(operands) == 0 {
 		return acc == target
 	}
 	acc += operands[0]
-	return TryPlus(operands[1:], acc, target) || TryTimes(operands[1:], acc, target)
+	return TryPlus1(operands[1:], acc, target) || TryTimes1(operands[1:], acc, target)
 }
 
-func TryTimes(operands []int, acc, target int) bool {
+func TryTimes1(operands []int, acc, target int) bool {
 	// fmt.Printf("TryPlus(%v, %d, %d)\n", operands, acc, target)
 	if len(operands) == 0 {
 		return acc == target
 	}
 	acc *= operands[0]
-	return TryPlus(operands[1:], acc, target) || TryTimes(operands[1:], acc, target)
+	return TryPlus1(operands[1:], acc, target) || TryTimes1(operands[1:], acc, target)
+}
+
+// --- could change part1 too but... it's late already.
+
+func evalPart2(eq Eq) bool {
+	return TryPlus2(eq.operands[1:], eq.operands[0], eq.result) ||
+		TryTimes2(eq.operands[1:], eq.operands[0], eq.result) ||
+		TryConcat(eq.operands[1:], eq.operands[0], eq.result)
+}
+
+func TryPlus2(operands []int, acc, target int) bool {
+	// fmt.Printf("TryPlus(%v, %d, %d)\n", operands, acc, target)
+	acc += operands[0]
+	if len(operands) == 1 {
+		return acc == target
+	}
+	return TryPlus2(operands[1:], acc, target) || TryTimes2(operands[1:], acc, target) || TryConcat(operands[1:], acc, target)
+}
+
+func TryTimes2(operands []int, acc, target int) bool {
+	// fmt.Printf("TryTimes(%v, %d, %d)\n", operands, acc, target)
+	acc *= operands[0]
+	if len(operands) == 1 {
+		return acc == target
+	}
+	return TryPlus2(operands[1:], acc, target) || TryTimes2(operands[1:], acc, target) || TryConcat(operands[1:], acc, target)
+}
+
+func TryConcat(operands []int, acc, target int) bool {
+	// fmt.Printf("TryConcat(%v, %d, %d)", operands, acc, target)
+	numDigits := int(math.Floor(math.Log10(float64(operands[0]))) + 1)
+	acc = acc*int(math.Pow10(numDigits)) + operands[0]
+	// fmt.Printf(" -> %d\n", acc)
+	if len(operands) == 1 {
+		return acc == target
+	}
+	return TryPlus2(operands[1:], acc, target) || TryTimes2(operands[1:], acc, target) || TryConcat(operands[1:], acc, target)
 }
