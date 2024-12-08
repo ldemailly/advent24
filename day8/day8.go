@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -91,6 +92,9 @@ func AntiPoints2(res []Point, ps []Point, max int) []Point {
 }
 
 func main() {
+	debug := false
+	flag.BoolVar(&debug, "debug", false, "debug mode: only for uppercase input")
+	flag.Parse()
 	inp, _ := io.ReadAll(os.Stdin)
 	lines := strings.Split(strings.TrimSpace(string(inp)), "\n")
 	height := len(lines)
@@ -112,19 +116,28 @@ func main() {
 	res := sets.New[Point]()
 	for k, v := range m.m {
 		ap := AntiPoints1(nil, v, m.max)
-		fmt.Printf("%c: %d %v\n", k, len(ap), ap)
 		res.Add(ap...)
+		if debug {
+			fmt.Printf("%c: %d %v\n", k, len(ap), ap)
+		}
 	}
 	fmt.Println("Part1:", len(res))
 	res.Clear()
 	for k, v := range m.m {
 		ap := AntiPoints2(v, v, m.max)
+		res.Add(ap...)
+		if !debug {
+			continue
+		}
 		fmt.Printf("%c: %d unique %d raw %v\n", k, len(ap), len(sets.FromSlice(ap)), ap)
 		lowerCase := k + 0x20
+		if _, found := m.m[lowerCase]; found {
+			log.Fatalf("Can't use -debug because found '%c' already preexisting when adding '%c'", lowerCase, k)
+			continue
+		}
 		m.m[lowerCase] = ap
 		fmt.Println(m)
 		delete(m.m, lowerCase)
-		res.Add(ap...)
 	}
 	fmt.Println("Part2:", len(res))
 }
