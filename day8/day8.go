@@ -22,7 +22,7 @@ func (p Point) Ok(max int) bool {
 	return p.x >= 0 && p.y >= 0 && p.x < max && p.y < max
 }
 
-func AntiPoints(res []Point, ps []Point, max int) []Point {
+func AntiPoints1(res []Point, ps []Point, max int) []Point {
 	p0 := ps[0]
 	for _, p := range ps[1:] {
 		a1 := p0.Anti(p)
@@ -35,7 +35,39 @@ func AntiPoints(res []Point, ps []Point, max int) []Point {
 		}
 	}
 	if len(ps) > 2 {
-		res = AntiPoints(res, ps[1:], max)
+		res = AntiPoints1(res, ps[1:], max)
+	}
+	return res
+}
+
+func AntiPoints2(res []Point, ps []Point, max int) []Point {
+	p0 := ps[0]
+	for _, p := range ps[1:] {
+		p00 := p0
+		pp := p
+		for {
+			a1 := p00.Anti(pp)
+			if !a1.Ok(max) {
+				break
+			}
+			res = append(res, a1)
+			p00 = pp
+			pp = a1
+		}
+		p00 = p0
+		pp = p
+		for {
+			a2 := pp.Anti(p00)
+			if !a2.Ok(max) {
+				break
+			}
+			res = append(res, a2)
+			p00 = pp
+			pp = a2
+		}
+	}
+	if len(ps) > 2 {
+		res = AntiPoints2(res, ps[1:], max)
 	}
 	return res
 }
@@ -61,9 +93,16 @@ func main() {
 	}
 	res := sets.New[Point]()
 	for k, v := range m {
-		ap := AntiPoints(nil, v, max)
-		fmt.Printf("%c: %d %v\n", k, len(ap), AntiPoints(nil, v, max))
+		ap := AntiPoints1(nil, v, max)
+		fmt.Printf("%c: %d %v\n", k, len(ap), ap)
 		res.Add(ap...)
 	}
-	fmt.Println("Total:", len(res))
+	fmt.Println("Part1:", len(res))
+	res.Clear()
+	for k, v := range m {
+		ap := AntiPoints2(v, v, max)
+		fmt.Printf("%c: %d %v\n", k, len(ap), ap)
+		res.Add(ap...)
+	}
+	fmt.Println("Part2:", len(res))
 }
