@@ -10,6 +10,32 @@ import (
 	"fortio.org/sets"
 )
 
+type Map struct {
+	m   map[byte][]Point
+	max int
+	buf []byte
+}
+
+func (m Map) Set(c byte, p Point) {
+	m.buf[p.y*(m.max+1)+p.x] = c
+}
+
+func (m Map) String() string {
+	m.buf = make([]byte, m.max*(m.max+1))
+	for y := range m.max {
+		for x := range m.max {
+			m.buf[y*(m.max+1)+x] = '.'
+		}
+		m.buf[y*(m.max+1)+m.max] = '\n'
+	}
+	for k, v := range m.m {
+		for _, p := range v {
+			m.Set(k, p)
+		}
+	}
+	return string(m.buf)
+}
+
 type Point struct {
 	x, y int
 }
@@ -40,31 +66,23 @@ func AntiPoints1(res []Point, ps []Point, max int) []Point {
 	return res
 }
 
+func Anti2(from, to Point, max int) (res []Point) {
+	for {
+		next := from.Anti(to)
+		if !next.Ok(max) {
+			return res
+		}
+		res = append(res, next)
+		from = to
+		to = next
+	}
+}
+
 func AntiPoints2(res []Point, ps []Point, max int) []Point {
 	p0 := ps[0]
 	for _, p := range ps[1:] {
-		p00 := p0
-		pp := p
-		for {
-			a1 := p00.Anti(pp)
-			if !a1.Ok(max) {
-				break
-			}
-			res = append(res, a1)
-			p00 = pp
-			pp = a1
-		}
-		p00 = p0
-		pp = p
-		for {
-			a2 := pp.Anti(p00)
-			if !a2.Ok(max) {
-				break
-			}
-			res = append(res, a2)
-			p00 = pp
-			pp = a2
-		}
+		res = append(res, Anti2(p0, p, max)...)
+		res = append(res, Anti2(p, p0, max)...)
 	}
 	if len(ps) > 2 {
 		res = AntiPoints2(res, ps[1:], max)
@@ -80,28 +98,32 @@ func main() {
 	if height != width {
 		log.Fatalf("Non-square map: %d x %d", height, width)
 	}
-	max := height
-	m := make(map[byte][]Point)
+	m := Map{m: make(map[byte][]Point), max: height}
 	for y := range height {
 		l := lines[y]
 		for x := range width {
 			if l[x] == '.' {
 				continue
 			}
-			m[l[x]] = append(m[l[x]], Point{x, y})
+			m.m[l[x]] = append(m.m[l[x]], Point{x, y})
 		}
 	}
+	fmt.Println(m)
 	res := sets.New[Point]()
-	for k, v := range m {
-		ap := AntiPoints1(nil, v, max)
+	for k, v := range m.m {
+		ap := AntiPoints1(nil, v, m.max)
 		fmt.Printf("%c: %d %v\n", k, len(ap), ap)
 		res.Add(ap...)
 	}
 	fmt.Println("Part1:", len(res))
 	res.Clear()
-	for k, v := range m {
-		ap := AntiPoints2(v, v, max)
-		fmt.Printf("%c: %d %v\n", k, len(ap), ap)
+	for k, v := range m.m {
+		ap := AntiPoints2(v, v, m.max)
+		fmt.Printf("%c: %d unique %d raw %v\n", k, len(ap), len(sets.FromSlice(ap)), ap)
+		lowerCase := k + 0x20
+		m.m[lowerCase] = ap
+		fmt.Println(m)
+		delete(m.m, lowerCase)
 		res.Add(ap...)
 	}
 	fmt.Println("Part2:", len(res))
