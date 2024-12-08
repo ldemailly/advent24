@@ -73,8 +73,8 @@ func Anti2(from, to Point, max int) (res []Point) {
 			return res
 		}
 		res = append(res, next)
-		from = to
-		to = next
+		to = from
+		from = next
 	}
 }
 
