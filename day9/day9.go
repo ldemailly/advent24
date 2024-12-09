@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -160,7 +161,17 @@ func (fs *FS) Checksum() int {
 	return sum
 }
 
+var debug = false
+
+func DebugPrintf(format string, a ...interface{}) {
+	if debug {
+		fmt.Printf(format, a...)
+	}
+}
+
 func main() {
+	flag.BoolVar(&debug, "debug", false, "debug mode: only for uppercase input")
+	flag.Parse()
 	fs := FS{}
 	m, _ := io.ReadAll(os.Stdin)
 	for i, c := range m {
@@ -173,15 +184,15 @@ func main() {
 			fs.NewEmpty(CharToLen(c))
 		}
 	}
-	fmt.Printf("FS is %d blocks (%s)\n", fs.size, fs)
+	DebugPrintf("FS is %d blocks (%s)\n", fs.size, fs)
 	fs.Flatten()
-	fmt.Printf("Flattened1 is %s (%v)\n", fs.FlatString(), fs.flat)
+	DebugPrintf("Flattened1 is %s (%v)\n", fs.FlatString(), fs.flat)
 	fs.Defrag()
-	fmt.Printf("Defragged1 is %s (%v)\n", fs.FlatString(), fs.flat)
+	DebugPrintf("Defragged1 is %s (%v)\n", fs.FlatString(), fs.flat)
 	fmt.Println("Checksum Part1:", fs.Checksum())
 	// Part1
 	fs.Defrag2()
 	fs.Flatten()
-	fmt.Printf("Defragged2 is %s (%v)\n", fs.FlatString(), fs.flat)
+	DebugPrintf("Defragged2 is %s (%v)\n", fs.FlatString(), fs.flat)
 	fmt.Println("Checksum Part2:", fs.Checksum())
 }
