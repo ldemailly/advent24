@@ -112,7 +112,9 @@ func main() {
 			m.m[l[x]] = append(m.m[l[x]], Point{x, y})
 		}
 	}
-	fmt.Println(m)
+	if debug {
+		fmt.Println(m)
+	}
 	res := sets.New[Point]()
 	for k, v := range m.m {
 		ap := AntiPoints1(nil, v, m.max)
