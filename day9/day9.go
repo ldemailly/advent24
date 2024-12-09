@@ -107,6 +107,18 @@ func (fs *FS) FlatString() string {
 	return buf.String()
 }
 
+func (fs *FS) Checksum() int {
+	sum := 0
+	for i, id := range fs.flat {
+		mul := id
+		if id == EMPTY {
+			mul = 0
+		}
+		sum += i * mul
+	}
+	return sum
+}
+
 func main() {
 	fs := FS{}
 	m, _ := io.ReadAll(os.Stdin)
@@ -125,5 +137,5 @@ func main() {
 	fmt.Printf("Flattened is %s (%v)\n", fs.FlatString(), fs.flat)
 	fs.Defrag()
 	fmt.Printf("Defragged is %s (%v)\n", fs.FlatString(), fs.flat)
-	// fmt.Println("Part1:", fs.Checksum())
+	fmt.Println("Part1:", fs.Checksum())
 }
