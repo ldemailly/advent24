@@ -40,6 +40,9 @@ func (f File) IdToChar() string {
 	if f.id == EMPTY {
 		return "."
 	}
+	if f.id > 9 {
+		return "*"
+	}
 	return string(byte(f.id + '0'))
 }
 
@@ -94,7 +97,11 @@ func (fs *FS) FlatString() string {
 		if id == EMPTY {
 			buf.WriteByte('.')
 		} else {
-			buf.WriteByte(byte(id + '0'))
+			if id > 9 {
+				buf.WriteRune('*')
+			} else {
+				buf.WriteByte(byte(id + '0'))
+			}
 		}
 	}
 	return buf.String()
