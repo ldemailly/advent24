@@ -91,6 +91,47 @@ func (fs *FS) Defrag() {
 	}
 }
 
+func (fs *FS) Defrag2() {
+	j := len(fs.s) - 1
+	for j >= 0 {
+		if fs.s[j].id == EMPTY {
+			j--
+			continue
+		}
+		i := 0
+		swapped := false
+		for i < j {
+			if fs.s[i].id != EMPTY {
+				i++
+				continue
+			}
+			if fs.s[i].size >= fs.s[j].size {
+				newHole := fs.s[i].size - fs.s[j].size
+				if newHole > 0 {
+					fs.s[i] = fs.s[j]
+					fs.s[j].id = EMPTY
+					// insert remaining hole
+					newFS := make([]File, 0, len(fs.s)+1)
+					newFS = append(newFS, fs.s[:i+1]...)
+					newFS = append(newFS, File{id: EMPTY, size: newHole})
+					newFS = append(newFS, fs.s[i+1:]...)
+					fs.s = newFS
+					// j is already decremented by making fs bigger/inserting the leftover hole
+				} else {
+					fs.s[i], fs.s[j] = fs.s[j], fs.s[i]
+					j--
+				}
+				swapped = true
+				break
+			}
+			i++
+		}
+		if !swapped {
+			j--
+		}
+	}
+}
+
 func (fs *FS) FlatString() string {
 	var buf strings.Builder
 	for _, id := range fs.flat {
@@ -134,8 +175,13 @@ func main() {
 	}
 	fmt.Printf("FS is %d blocks (%s)\n", fs.size, fs)
 	fs.Flatten()
-	fmt.Printf("Flattened is %s (%v)\n", fs.FlatString(), fs.flat)
+	fmt.Printf("Flattened1 is %s (%v)\n", fs.FlatString(), fs.flat)
 	fs.Defrag()
-	fmt.Printf("Defragged is %s (%v)\n", fs.FlatString(), fs.flat)
-	fmt.Println("Part1:", fs.Checksum())
+	fmt.Printf("Defragged1 is %s (%v)\n", fs.FlatString(), fs.flat)
+	fmt.Println("Checksum Part1:", fs.Checksum())
+	// Part1
+	fs.Defrag2()
+	fs.Flatten()
+	fmt.Printf("Defragged2 is %s (%v)\n", fs.FlatString(), fs.flat)
+	fmt.Println("Checksum Part2:", fs.Checksum())
 }
