@@ -12,22 +12,22 @@ import (
 )
 
 type Map struct {
-	m   map[byte][]Point
-	max int
-	buf []byte
+	m    map[byte][]Point
+	maxL int
+	buf  []byte
 }
 
 func (m Map) Set(c byte, p Point) {
-	m.buf[p.y*(m.max+1)+p.x] = c
+	m.buf[p.y*(m.maxL+1)+p.x] = c
 }
 
 func (m Map) String() string {
-	m.buf = make([]byte, m.max*(m.max+1))
-	for y := range m.max {
-		for x := range m.max {
-			m.buf[y*(m.max+1)+x] = '.'
+	m.buf = make([]byte, m.maxL*(m.maxL+1))
+	for y := range m.maxL {
+		for x := range m.maxL {
+			m.buf[y*(m.maxL+1)+x] = '.'
 		}
-		m.buf[y*(m.max+1)+m.max] = '\n'
+		m.buf[y*(m.maxL+1)+m.maxL] = '\n'
 	}
 	for k, v := range m.m {
 		for _, p := range v {
@@ -45,32 +45,32 @@ func (p Point) Anti(o Point) Point {
 	return Point{2*p.x - o.x, 2*p.y - o.y}
 }
 
-func (p Point) Ok(max int) bool {
-	return p.x >= 0 && p.y >= 0 && p.x < max && p.y < max
+func (p Point) Ok(maxL int) bool {
+	return p.x >= 0 && p.y >= 0 && p.x < maxL && p.y < maxL
 }
 
-func AntiPoints1(res []Point, ps []Point, max int) []Point {
+func AntiPoints1(res []Point, ps []Point, maxL int) []Point {
 	p0 := ps[0]
 	for _, p := range ps[1:] {
 		a1 := p0.Anti(p)
-		if a1.Ok(max) {
+		if a1.Ok(maxL) {
 			res = append(res, a1)
 		}
 		a2 := p.Anti(p0)
-		if a2.Ok(max) {
+		if a2.Ok(maxL) {
 			res = append(res, a2)
 		}
 	}
 	if len(ps) > 2 {
-		res = AntiPoints1(res, ps[1:], max)
+		res = AntiPoints1(res, ps[1:], maxL)
 	}
 	return res
 }
 
-func Anti2(from, to Point, max int) (res []Point) {
+func Anti2(from, to Point, maxL int) (res []Point) {
 	for {
 		next := from.Anti(to)
-		if !next.Ok(max) {
+		if !next.Ok(maxL) {
 			return res
 		}
 		res = append(res, next)
@@ -79,14 +79,14 @@ func Anti2(from, to Point, max int) (res []Point) {
 	}
 }
 
-func AntiPoints2(res []Point, ps []Point, max int) []Point {
+func AntiPoints2(res []Point, ps []Point, maxL int) []Point {
 	p0 := ps[0]
 	for _, p := range ps[1:] {
-		res = append(res, Anti2(p0, p, max)...)
-		res = append(res, Anti2(p, p0, max)...)
+		res = append(res, Anti2(p0, p, maxL)...)
+		res = append(res, Anti2(p, p0, maxL)...)
 	}
 	if len(ps) > 2 {
-		res = AntiPoints2(res, ps[1:], max)
+		res = AntiPoints2(res, ps[1:], maxL)
 	}
 	return res
 }
@@ -102,7 +102,7 @@ func main() {
 	if height != width {
 		log.Fatalf("Non-square map: %d x %d", height, width)
 	}
-	m := Map{m: make(map[byte][]Point), max: height}
+	m := Map{m: make(map[byte][]Point), maxL: height}
 	for y := range height {
 		l := lines[y]
 		for x := range width {
@@ -117,7 +117,7 @@ func main() {
 	}
 	res := sets.New[Point]()
 	for k, v := range m.m {
-		ap := AntiPoints1(nil, v, m.max)
+		ap := AntiPoints1(nil, v, m.maxL)
 		res.Add(ap...)
 		if debug {
 			fmt.Printf("%c: %d %v\n", k, len(ap), ap)
@@ -126,7 +126,7 @@ func main() {
 	fmt.Println("Part1:", len(res))
 	res.Clear()
 	for k, v := range m.m {
-		ap := AntiPoints2(v, v, m.max)
+		ap := AntiPoints2(v, v, m.maxL)
 		res.Add(ap...)
 		if !debug {
 			continue
@@ -135,7 +135,6 @@ func main() {
 		lowerCase := k + 0x20
 		if _, found := m.m[lowerCase]; found {
 			log.Fatalf("Can't use -debug because found '%c' already preexisting when adding '%c'", lowerCase, k)
-			continue
 		}
 		m.m[lowerCase] = ap
 		fmt.Println(m)

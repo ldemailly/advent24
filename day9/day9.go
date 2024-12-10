@@ -13,31 +13,27 @@ type File struct {
 	size int
 }
 
-func (fs *FS) New(p []byte) (n int, err error) {
-	return 0, nil
-}
-
 const EMPTY = -1
 
 type FS struct {
 	s      []File // fileids
 	size   int
-	lastId int
+	lastID int
 	flat   []int
 }
 
-func (fs *FS) NewEmpty(len int) {
-	fs.size += len
-	fs.s = append(fs.s, File{id: EMPTY, size: len})
+func (fs *FS) NewEmpty(lg int) {
+	fs.size += lg
+	fs.s = append(fs.s, File{id: EMPTY, size: lg})
 }
 
-func (fs *FS) NewFile(len int) {
-	fs.size += len
-	fs.s = append(fs.s, File{id: fs.lastId, size: len})
-	fs.lastId++
+func (fs *FS) NewFile(lg int) {
+	fs.size += lg
+	fs.s = append(fs.s, File{id: fs.lastID, size: lg})
+	fs.lastID++
 }
 
-func (f File) IdToChar() string {
+func (f File) ID2Str() string {
 	if f.id == EMPTY {
 		return "."
 	}
@@ -48,7 +44,7 @@ func (f File) IdToChar() string {
 }
 
 func (f File) String() string {
-	return strings.Repeat(f.IdToChar(), f.size)
+	return strings.Repeat(f.ID2Str(), f.size)
 }
 
 func (fs FS) String() string {

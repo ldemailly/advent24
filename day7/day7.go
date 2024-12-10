@@ -154,15 +154,15 @@ func TryConcat(operands []Val, acc, target int) bool {
 	return TryPlus2(operands[1:], acc, target) || TryTimes2(operands[1:], acc, target) || TryConcat(operands[1:], acc, target)
 }
 
-// initial float math version:
+// initial float math version.
 func IntConcat1(a, b int) int {
 	numDigits := int(math.Floor(math.Log10(float64(b))) + 1)
 	return a*int(math.Pow10(numDigits)) + b
 }
 
-// Pure integer version:
+// Pure integer version (also not used now).
 func IntConcat2(a, b int) int {
-	var big = 1
+	big := 1
 	for b >= big {
 		big *= 10
 	}

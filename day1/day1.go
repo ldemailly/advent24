@@ -5,6 +5,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -50,7 +51,7 @@ func readInput() ([]int, []int) {
 		var n1, n2 int
 		lines++
 		n, err := fmt.Scanf("%d %d\n", &n1, &n2)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if n != 2 {

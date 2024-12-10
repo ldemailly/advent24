@@ -34,13 +34,13 @@ func (g *Guard) Move(backward bool) {
 	}
 	switch g.direction {
 	case north:
-		g.y = g.y - delta
+		g.y -= delta
 	case east:
-		g.x = g.x + delta
+		g.x += delta
 	case south:
-		g.y = g.y + delta
+		g.y += delta
 	case west:
-		g.x = g.x - delta
+		g.x -= delta
 	}
 }
 
@@ -56,7 +56,7 @@ const (
 	ClearEndOfLine = "\033[K"
 )
 
-func (g Guard) Print() string {
+func (g *Guard) Print() string {
 	switch g.direction {
 	case north:
 		return GreenBackground + "⇑" + Reset
@@ -77,7 +77,7 @@ const (
 	visited // + direction
 )
 
-// happens to be square
+// happens to be square.
 type Map struct {
 	m          [][]int
 	l          int
@@ -98,12 +98,10 @@ func (m *Map) Next(g *Guard) bool {
 	if m.m[g.y][g.x] == empty {
 		m.visited++
 		m.m[g.y][g.x] = visited + g.direction
-	} else {
-		if m.m[g.y][g.x] == visited+g.direction {
-			// fmt.Println("Loop at", g.x, g.y, "after", m.steps, "steps")
-			m.loop = true
-			return false
-		}
+	} else if m.m[g.y][g.x] == visited+g.direction {
+		// fmt.Println("Loop at", g.x, g.y, "after", m.steps, "steps")
+		m.loop = true
+		return false
 	}
 	g.Move(false)
 	if m.Outside(g) {
@@ -125,8 +123,8 @@ func (m *Map) SetNew(x, y int) {
 func (m *Map) Print(g Guard) string {
 	var b strings.Builder
 	b.WriteString("\033[H")
-	for y := 0; y < m.l; y++ {
-		for x := 0; x < m.l; x++ {
+	for y := range m.l {
+		for x := range m.l {
 			if g.x == x && g.y == y {
 				b.WriteString(g.Print())
 				continue
@@ -161,7 +159,7 @@ func (m *Map) Print(g Guard) string {
 	return b.String()
 }
 
-// copy without visited
+// copy without visited.
 func (m *Map) CleanClone() Map {
 	var m2 Map
 	m2.l = m.l
@@ -171,9 +169,9 @@ func (m *Map) CleanClone() Map {
 	m2.visited = 0
 	m2.loop = false
 	m2.m = make([][]int, 0, m.l)
-	for y := 0; y < m.l; y++ {
+	for y := range m.l {
 		row := make([]int, 0, m.l)
-		for x := 0; x < m.l; x++ {
+		for x := range m.l {
 			v := m.m[y][x]
 			if v != obstacle {
 				v = empty
@@ -185,8 +183,10 @@ func (m *Map) CleanClone() Map {
 	return m2
 }
 
-var doPrint = true
-var slow time.Duration
+var (
+	doPrint = true
+	slow    time.Duration
+)
 
 func (m *Map) MayPrint(g Guard, slowMult int, msg ...interface{}) {
 	if doPrint {
@@ -245,8 +245,8 @@ func main() {
 	part1 := m.visited
 	m.MayPrint(guard, 5, "Done after", m.steps, "steps:", part1, ClearEndOfLine)
 	loops := 0
-	for y := 0; y < m.l; y++ {
-		for x := 0; x < m.l; x++ {
+	for y := range m.l {
+		for x := range m.l {
 			if x == m.startX && y == m.startY {
 				continue
 			}
