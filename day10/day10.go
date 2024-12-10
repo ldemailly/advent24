@@ -29,15 +29,7 @@ var ansi256Gray = []int{
 var ansiColorGradiant = []int{52, 88, 124, 166, 202, 208, 214, 220, 226, 228}
 
 const (
-	GreenBackground = "\033[42m"
-	// Copied/inspired from my https://pkg.go.dev/fortio.org/terminal/ansipixels
-	Reset          = "\033[0m"
-	Green          = "\033[32m"
-	FullPixel      = '█'
-	BluePixel      = "\033[34m" + string(FullPixel) + Reset
-	RedPixel       = "\033[31m" + string(FullPixel) + Reset
-	ClearScreen    = "\033[2J"
-	ClearEndOfLine = "\033[K"
+	ClearScreen = "\033[2J"
 )
 
 func HeightToPixel(h int, color bool) string {
@@ -52,6 +44,7 @@ func HeightToPixel(h int, color bool) string {
 	if color {
 		c = ansiColorGradiant[h]
 	}
+	// Copied/inspired from my https://pkg.go.dev/fortio.org/terminal/ansipixels
 	return fmt.Sprintf("\033[48;5;%dm\033[38;5;%dm %d\033[0m", c, fg, h)
 }
 
