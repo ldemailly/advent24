@@ -93,7 +93,9 @@ func (m *Map) FindPaths() {
 					fmt.Print(m.Print())
 					fmt.Printf("Found %d path(s) at %d %d\n", p, x, y)
 					time.Sleep(50 * time.Millisecond)
-					m.ClearPaths()
+					if m.part1 {
+						m.ClearPaths()
+					}
 				}
 			}
 		}
