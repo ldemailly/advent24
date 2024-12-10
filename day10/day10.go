@@ -38,7 +38,11 @@ func HeightToPixel(h int) string {
 	if h < 0 || h >= len(ansi256Gray) {
 		log.Fatalf("Invalid height %d", h)
 	}
-	return fmt.Sprintf("\033[38;5;%dm█", ansi256Gray[h])
+	fg := 0
+	if h < 5 {
+		fg = 15
+	}
+	return fmt.Sprintf("\033[48;5;%dm\033[38;5;%dm %d\033[0m", ansi256Gray[h], fg, h)
 }
 
 // happens to be square.
