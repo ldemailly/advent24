@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var ansi256Gray = []int{
@@ -68,7 +69,7 @@ type Map struct {
 
 func (m *Map) Print() string {
 	var b strings.Builder
-	// b.WriteString("\033[H")
+	b.WriteString("\033[H")
 	for y := range m.l {
 		line := m.points[y]
 		for x := range m.l {
@@ -82,20 +83,27 @@ func (m *Map) Print() string {
 func (m *Map) FindPaths() {
 	sum := 0
 	// find all the starts
+	fmt.Print(ClearScreen)
 	for y := range m.l {
 		for x := range m.l {
 			if m.points[y][x].height == 0 {
 				p := m.CheckPath(x, y, 0)
 				sum += p
 				if p > 0 {
-					fmt.Printf("Found %d path(s) at %d %d\n", p, x, y)
 					fmt.Print(m.Print())
+					fmt.Printf("Found %d path(s) at %d %d\n", p, x, y)
+					time.Sleep(50 * time.Millisecond)
 					m.ClearPaths()
 				}
 			}
 		}
 	}
-	fmt.Printf("### Found %d paths\n", sum)
+	part := "2"
+	if m.part1 {
+		part = "1"
+	}
+	fmt.Printf("### Part %s found %d paths\n", part, sum)
+	time.Sleep(700 * time.Millisecond)
 }
 
 func (m *Map) CheckPath(x, y, cur int) int {
