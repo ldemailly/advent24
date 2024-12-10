@@ -78,7 +78,7 @@ func (m *Map) Print() string {
 	return b.String()
 }
 
-func (m *Map) SetPaths() {
+func (m *Map) FindPaths() {
 	sum := 0
 	// find all the starts
 	for y := range m.l {
@@ -88,6 +88,8 @@ func (m *Map) SetPaths() {
 				sum += p
 				if p > 0 {
 					fmt.Printf("Found %d path(s) at %d %d\n", p, x, y)
+					fmt.Print(m.Print())
+					m.ClearPaths()
 				}
 			}
 		}
@@ -105,20 +107,31 @@ func (m *Map) CheckPath(x, y, cur int) int {
 		return 0
 	}
 	if h == 9 {
+		if m.points[y][x].path {
+			return 0
+		}
 		m.points[y][x].path = true
 		return 1
 	}
 	cur++
 	// check all not just first match
-	p := m.CheckPath(x+1, y, cur)
-	p += m.CheckPath(x, y-1, cur)
-	p += m.CheckPath(x-1, y, cur)
-	p += m.CheckPath(x, y+1, cur)
+	p := m.CheckPath(x+1, y, cur) // check right
+	p += m.CheckPath(x, y-1, cur) // check up
+	p += m.CheckPath(x-1, y, cur) // check left
+	p += m.CheckPath(x, y+1, cur) // check down
 	if p > 0 {
 		m.points[y][x].path = true
 		return p
 	}
 	return 0
+}
+
+func (m *Map) ClearPaths() {
+	for y := range m.l {
+		for x := range m.l {
+			m.points[y][x].path = false
+		}
+	}
 }
 
 func main() {
@@ -145,6 +158,5 @@ func main() {
 	if len(m.points[0]) != m.l {
 		log.Fatalf("Invalid matrix %d vs %d", len(m.points[0]), m.l)
 	}
-	m.SetPaths()
-	fmt.Print(m.Print())
+	m.FindPaths()
 }
