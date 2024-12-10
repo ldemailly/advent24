@@ -63,6 +63,7 @@ type Point struct {
 type Map struct {
 	points [][]Point
 	l      int
+	part1  bool
 }
 
 func (m *Map) Print() string {
@@ -94,7 +95,7 @@ func (m *Map) FindPaths() {
 			}
 		}
 	}
-	fmt.Printf("Found %d paths\n", sum)
+	fmt.Printf("### Found %d paths\n", sum)
 }
 
 func (m *Map) CheckPath(x, y, cur int) int {
@@ -107,8 +108,8 @@ func (m *Map) CheckPath(x, y, cur int) int {
 		return 0
 	}
 	if h == 9 {
-		if m.points[y][x].path {
-			return 0
+		if m.part1 && m.points[y][x].path {
+			return 0 // part1 only counts how many 9s are reachable, part2 counts all paths.
 		}
 		m.points[y][x].path = true
 		return 1
@@ -158,5 +159,8 @@ func main() {
 	if len(m.points[0]) != m.l {
 		log.Fatalf("Invalid matrix %d vs %d", len(m.points[0]), m.l)
 	}
+	m.part1 = true
+	m.FindPaths()
+	m.part1 = false
 	m.FindPaths()
 }
