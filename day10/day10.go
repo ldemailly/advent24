@@ -32,6 +32,15 @@ const (
 	ClearScreen = "\033[2J"
 )
 
+func StartSyncMode() {
+	fmt.Print("\033[?2026h")
+}
+
+// End sync (and flush).
+func EndSyncMode() {
+	fmt.Print("\033[?2026l")
+}
+
 func HeightToPixel(h int, color bool) string {
 	if h < 0 || h >= len(ansi256Gray) {
 		log.Fatalf("Invalid height %d", h)
@@ -45,7 +54,10 @@ func HeightToPixel(h int, color bool) string {
 		c = ansiColorGradiant[h]
 	}
 	// Copied/inspired from my https://pkg.go.dev/fortio.org/terminal/ansipixels
-	return fmt.Sprintf("\033[48;5;%dm\033[38;5;%dm %d\033[0m", c, fg, h)
+	// with numbers for verification.
+	// return fmt.Sprintf("\033[48;5;%dm\033[38;5;%dm %d\033[0m", c, fg, h)
+	// just colors/gray: (no number)
+	return fmt.Sprintf("\033[48;5;%dm\033[38;5;%dm  \033[0m", c, fg)
 }
 
 type Point struct {
@@ -77,15 +89,21 @@ func (m *Map) FindPaths() {
 	sum := 0
 	// find all the starts
 	fmt.Print(ClearScreen)
+	sleep := 10 * time.Millisecond
+	if m.part1 {
+		sleep *= 3
+	}
 	for y := range m.l {
 		for x := range m.l {
 			if m.points[y][x].height == 0 {
 				p := m.CheckPath(x, y, 0)
 				sum += p
 				if p > 0 {
+					StartSyncMode()
 					fmt.Print(m.Print())
 					fmt.Printf("Found %d path(s) at %d %d\n", p, x, y)
-					time.Sleep(20 * time.Millisecond)
+					EndSyncMode()
+					time.Sleep(sleep)
 					if m.part1 {
 						m.ClearPaths()
 					}
