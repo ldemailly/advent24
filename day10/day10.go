@@ -55,9 +55,9 @@ func HeightToPixel(h int, color bool) string {
 	}
 	// Copied/inspired from my https://pkg.go.dev/fortio.org/terminal/ansipixels
 	// with numbers for verification.
-	// return fmt.Sprintf("\033[48;5;%dm\033[38;5;%dm %d\033[0m", c, fg, h)
+	return fmt.Sprintf("\033[48;5;%dm\033[38;5;%dm %d\033[0m", c, fg, h)
 	// just colors/gray: (no number)
-	return fmt.Sprintf("\033[48;5;%dm\033[38;5;%dm  \033[0m", c, fg)
+	// return fmt.Sprintf("\033[48;5;%dm\033[38;5;%dm  \033[0m", c, fg)
 }
 
 type Point struct {
