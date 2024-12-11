@@ -34,26 +34,34 @@ func StoneFromStr(s string) Stone {
 	return Stone{n, strings.TrimLeft(s, "0")}
 }
 
-func ApplyRules(inp []Stone) []Stone {
-	r := make([]Stone, 0, 2*len(inp)) // worst case is all gets doubled.
-	for _, v := range inp {
-		switch {
-		case v.n == 0:
-			r = append(r, One)
-		case evenDigits(v):
-			r = append(r, leftRight(v)...)
-		default:
-			r = append(r, StoneFromNum(2024*v.n))
-		}
-	}
-	return r
+type CacheKey struct {
+	stone Stone
+	depth int
 }
 
-func PrintStones(stones []Stone) {
-	for _, s := range stones {
-		fmt.Printf("%d ", s.n)
+var cache = make(map[CacheKey]int)
+
+func ApplyRules(v Stone, depth int) int {
+	// fmt.Println(v, depth)
+	if depth == 0 {
+		return 1
 	}
-	fmt.Println()
+	cacheKey := CacheKey{v, depth}
+	if r, ok := cache[cacheKey]; ok {
+		return r
+	}
+	r := 0
+	switch {
+	case v.n == 0:
+		r = ApplyRules(One, depth-1)
+	case evenDigits(v):
+		lr := leftRight(v)
+		r = ApplyRules(lr[0], depth-1) + ApplyRules(lr[1], depth-1)
+	default:
+		r = ApplyRules(StoneFromNum(2024*v.n), depth-1)
+	}
+	cache[cacheKey] = r
+	return r
 }
 
 func main() {
@@ -66,12 +74,16 @@ func main() {
 	for _, n := range inpList {
 		stones = append(stones, StoneFromStr(n))
 	}
-	for n := range 25 {
-		fmt.Println(n, stones)
-		PrintStones(stones)
-		stones = ApplyRules(stones)
-	}
 	// Part1
-	PrintStones(stones)
-	fmt.Println("Part 1", len(stones))
+	sum := 0
+	for v := range stones {
+		sum += ApplyRules(stones[v], 25)
+	}
+	fmt.Println("Part 1", sum)
+	// Part2
+	sum = 0
+	for v := range stones {
+		sum += ApplyRules(stones[v], 75)
+	}
+	fmt.Println("Part 2", sum)
 }
