@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strings"
 
@@ -22,6 +23,7 @@ type Region struct {
 type Map struct {
 	plots   [][]byte
 	seen    sets.Set[Coord]
+	inner   sets.Set[Coord]
 	regions []*Region
 }
 
@@ -74,13 +76,35 @@ func (m *Map) ExpandRegion(x, y int, c byte, r *Region) {
 	m.ExpandRegion(x, y+1, c, r)
 	m.ExpandRegion(x, y-1, c, r)
 	m.ExpandRegion(x-1, y, c, r)
-	r.perimeter += m.Edges(x, y)
-	return
+	edges := m.Edges(x, y)
+	r.perimeter += edges
+	if edges == 0 {
+		m.inner.Add(co)
+	}
+}
+
+func Color(c, what byte) string {
+	idx := int(c) - int('A')
+	if idx < 0 || idx >= 26 {
+		log.Fatalf("Invalid color %c %d", c, c)
+	}
+	color := 18 + idx*216/26
+	return fmt.Sprintf("\033[48;5;%dm%c\033[0m", color, what)
 }
 
 func (m *Map) String() string {
 	sum := 0
 	var b strings.Builder
+	for y, row := range m.plots {
+		for x, c := range row {
+			what := c
+			if m.inner.Has(Coord{x, y}) {
+				what = ' '
+			}
+			b.WriteString(Color(c, what))
+		}
+		b.WriteByte('\n')
+	}
 	for _, r := range m.regions {
 		s := len(r.coords)
 		p := r.perimeter
@@ -97,7 +121,7 @@ func main() {
 	data, _ := io.ReadAll(os.Stdin)
 	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
 	// Part1
-	m := Map{plots: make([][]byte, len(lines)), seen: sets.New[Coord]()}
+	m := Map{plots: make([][]byte, len(lines)), seen: sets.New[Coord](), inner: sets.New[Coord]()}
 	for i, line := range lines {
 		m.plots[i] = []byte(line)
 	}
