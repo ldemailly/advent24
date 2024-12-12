@@ -14,15 +14,15 @@ type Coord struct {
 }
 
 type Region struct {
-	id     byte
-	coords sets.Set[Coord]
+	id        byte
+	coords    sets.Set[Coord]
+	perimeter int
 }
 
 type Map struct {
 	plots   [][]byte
 	seen    sets.Set[Coord]
-	regions []Region
-	// perim   int
+	regions []*Region
 }
 
 func (m *Map) Regions() {
@@ -32,14 +32,32 @@ func (m *Map) Regions() {
 			if m.seen.Has(co) {
 				continue
 			}
-			r := Region{id: c, coords: sets.New[Coord]()}
+			r := &Region{id: c, coords: sets.New[Coord]()}
 			m.regions = append(m.regions, r)
 			m.ExpandRegion(x, y, c, r)
 		}
 	}
 }
 
-func (m *Map) ExpandRegion(x, y int, c byte, r Region) {
+func (m *Map) Edges(x, y int) int {
+	edges := 0
+	c := m.plots[y][x]
+	if x == 0 || m.plots[y][x-1] != c {
+		edges++
+	}
+	if y == 0 || m.plots[y-1][x] != c {
+		edges++
+	}
+	if x == len(m.plots[0])-1 || m.plots[y][x+1] != c {
+		edges++
+	}
+	if y == len(m.plots)-1 || m.plots[y+1][x] != c {
+		edges++
+	}
+	return edges
+}
+
+func (m *Map) ExpandRegion(x, y int, c byte, r *Region) {
 	if x < 0 || y < 0 || x >= len(m.plots) || y >= len(m.plots[0]) {
 		return
 	}
@@ -56,13 +74,21 @@ func (m *Map) ExpandRegion(x, y int, c byte, r Region) {
 	m.ExpandRegion(x, y+1, c, r)
 	m.ExpandRegion(x, y-1, c, r)
 	m.ExpandRegion(x-1, y, c, r)
+	r.perimeter += m.Edges(x, y)
+	return
 }
 
 func (m *Map) String() string {
+	sum := 0
 	var b strings.Builder
 	for _, r := range m.regions {
-		b.WriteString(fmt.Sprintf("Region %c: %d\n", r.id, len(r.coords)))
+		s := len(r.coords)
+		p := r.perimeter
+		cost := s * p
+		sum += cost
+		b.WriteString(fmt.Sprintf("Region %c: s %d p %d = %d\n", r.id, s, p, cost))
 	}
+	b.WriteString(fmt.Sprintf("Total: %d\n", sum))
 	return b.String()
 }
 
