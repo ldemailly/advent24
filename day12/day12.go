@@ -14,17 +14,16 @@ type Coord struct {
 	x, y int
 }
 
-/*
-type Edge struct {
-	direction Coord
-	where     Coord // only one of x or y is set depending on direction (ie for vertical, which line)
+type Vector struct {
+	direction  Coord
+	start, end Coord
 }
-*/
 
 type Region struct {
 	id        byte
 	coords    sets.Set[Coord]
 	perimeter int
+	vectors   [4][]Vector
 	edges     int
 }
 
@@ -33,6 +32,15 @@ type Map struct {
 	seen    sets.Set[Coord]
 	inner   sets.Set[Coord]
 	regions []*Region
+}
+
+func (r *Region) AddVector(dirID int, x, y int) {
+	// extend vector or new one
+	if len(r.vectors[dirID]) == 0 {
+		r.vectors[dirID] = append(r.vectors[dirID], Vector{start: Coord{x, y}, direction: directions[dirID]})
+		r.edges++
+		return
+	}
 }
 
 func (m *Map) Regions() {
@@ -48,6 +56,13 @@ func (m *Map) Regions() {
 		}
 	}
 }
+
+const (
+	westID = iota
+	southID
+	northID
+	eastID
+)
 
 var (
 	west  = Coord{-1, 0}
@@ -73,36 +88,13 @@ func (m *Map) IsEdge(c byte, x, y int, direction Coord) bool {
 	return m.Outside(xx, yy) || m.plots[yy][xx] != c
 }
 
-func (m *Map) Perimeter(x, y int) int {
+func (m *Map) Edges(r *Region, x, y int) int {
 	edges := 0
 	c := m.plots[y][x]
-	for _, d := range directions {
+	for did, d := range directions {
 		if m.IsEdge(c, x, y, d) {
+			r.AddVector(did, x, y)
 			edges++
-		}
-	}
-	return edges
-}
-
-func (m *Map) Edges(x, y int) int {
-	edges := 0
-	c := m.plots[y][x]
-	for _, d := range directions {
-		if !m.IsEdge(c, x, y, d) {
-			continue
-		}
-		n1d := d.SwapAxis()
-		n2d := n1d.SwapDirection()
-		x1 := x + n1d.x
-		y1 := y + n1d.y
-		x2 := x + n2d.x
-		y2 := y + n2d.y
-		fmt.Printf("Checking %c %d %d direction %v -> %d %d and %d %d : ", c, x, y, d, x1, y1, x2, y2)
-		if m.Outside(x1, y1) || m.Outside(x2, y2) || !m.IsEdge(c, x1, y1, d) || !m.IsEdge(c, x2, y2, d) {
-			fmt.Println("yes")
-			edges++
-		} else {
-			fmt.Println("no")
 		}
 	}
 	return edges
@@ -128,12 +120,10 @@ func (m *Map) ExpandRegion(x, y int, c byte, r *Region) {
 	for _, d := range directions {
 		m.ExpandRegion(x+d.x, y+d.y, c, r)
 	}
-	perim := m.Perimeter(x, y)
+	perim := m.Edges(r, x, y)
 	r.perimeter += perim
 	if perim == 0 {
 		m.inner.Add(co)
-	} else {
-		r.edges += m.Edges(x, y)
 	}
 }
 
