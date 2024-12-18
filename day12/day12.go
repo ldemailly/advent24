@@ -14,17 +14,11 @@ type Coord struct {
 	x, y int
 }
 
-type Vector struct {
-	direction  Coord
-	start, end Coord
-}
-
 type Region struct {
 	id        byte
 	coords    sets.Set[Coord]
 	perimeter int
-	vectors   [4][]Vector
-	edges     int
+	corners   int
 }
 
 type Map struct {
@@ -32,15 +26,6 @@ type Map struct {
 	seen    sets.Set[Coord]
 	inner   sets.Set[Coord]
 	regions []*Region
-}
-
-func (r *Region) AddVector(dirID int, x, y int) {
-	// extend vector or new one
-	if len(r.vectors[dirID]) == 0 {
-		r.vectors[dirID] = append(r.vectors[dirID], Vector{start: Coord{x, y}, direction: directions[dirID]})
-		r.edges++
-		return
-	}
 }
 
 func (m *Map) Regions() {
@@ -57,13 +42,6 @@ func (m *Map) Regions() {
 	}
 }
 
-const (
-	westID = iota
-	southID
-	northID
-	eastID
-)
-
 var (
 	west  = Coord{-1, 0}
 	south = Coord{0, 1}
@@ -74,30 +52,82 @@ var (
 // West, South, North, East // optimized for fill order.
 var directions = []Coord{west, south, north, east}
 
-func (c Coord) SwapAxis() Coord {
-	return Coord{c.y, c.x}
-}
-
-func (c Coord) SwapDirection() Coord {
-	return Coord{-c.x, -c.y}
-}
-
 func (m *Map) IsEdge(c byte, x, y int, direction Coord) bool {
 	xx := x + direction.x
 	yy := y + direction.y
 	return m.Outside(xx, yy) || m.plots[yy][xx] != c
 }
 
-func (m *Map) Edges(r *Region, x, y int) int {
+/* Rotate by 45 degrees clockwise ie N->NE; NE->E; E->SE... */
+func (c Coord) RotateRight() Coord {
+	if c.x == 0 { // N/S to NE/SW.
+		c.x = -c.y
+		return c
+	}
+	if c.y == 0 { // E/W to SE/NW.
+		c.y = c.x
+		return c
+	}
+	if c.x == -c.y { // NE -> E
+		c.y = 0
+		return c
+	}
+	c.x = 0
+	return c
+}
+
+/*
+Handle (for each 4 directions, this example is north)
+
+	3
+	13
+
+	ie. 3 and 3 + 1 in middle by checking the Diagonal.
+*/
+func (m *Map) IsSpecial(c byte, x, y int, d Coord) bool {
+	diag := d.RotateRight()
+	xd := x + diag.x
+	yd := y + diag.y
+	if m.Outside(xd, yd) {
+		return false
+	}
+	if m.plots[yd][xd] == c {
+		return false
+	}
+	// We already check that direction d isn't an edge, so only the 90deg right needs checking.
+	next := diag.RotateRight()
+	xdn := x + next.x
+	ydn := y + next.y
+	return m.plots[ydn][xdn] == c
+}
+
+func (m *Map) Edges(x, y int) (int, int) {
 	edges := 0
 	c := m.plots[y][x]
-	for did, d := range directions {
+	var e [4]bool
+	corners := 0
+	for i, d := range directions {
 		if m.IsEdge(c, x, y, d) {
-			r.AddVector(did, x, y)
+			e[i] = true
 			edges++
+		} else if m.IsSpecial(c, x, y, d) {
+			// fmt.Printf("Special %c at %d,%d for %v (%v)\n", r.id, x, y, d, d.RotateRight())
+			corners++
 		}
 	}
-	return edges
+	switch edges {
+	case 4:
+		corners += 4
+	case 3:
+		corners += 2
+	case 2:
+		// only a corner if the edges are not opposite
+		if !((e[0] && e[3]) || (e[1] && e[2])) {
+			corners++
+		}
+	}
+	// fmt.Printf("Region  %c at %d,%d edges %d  (%v) corners %d\n", r.id, x, y, edges, e, corners)
+	return edges, corners
 }
 
 func (m *Map) Outside(x, y int) bool {
@@ -120,8 +150,9 @@ func (m *Map) ExpandRegion(x, y int, c byte, r *Region) {
 	for _, d := range directions {
 		m.ExpandRegion(x+d.x, y+d.y, c, r)
 	}
-	perim := m.Edges(r, x, y)
+	perim, corners := m.Edges(x, y)
 	r.perimeter += perim
+	r.corners += corners
 	if perim == 0 {
 		m.inner.Add(co)
 	}
@@ -155,13 +186,13 @@ func (m *Map) String() string {
 		p := r.perimeter
 		cost1 := s * p
 		sum1 += cost1
-		e := r.edges
+		e := r.corners
 		cost2 := s * e
 		sum2 += cost2
-		b.WriteString(fmt.Sprintf("Region %c: s %d p %d = %d - e %d = %d\n", r.id, s, p, cost1, e, cost2))
+		b.WriteString(fmt.Sprintf("Region %c: s %d p %d = %d - c %d = %d\n", r.id, s, p, cost1, e, cost2))
 	}
 	b.WriteString(fmt.Sprintf("Total with perimeter : %d\n", sum1))
-	b.WriteString(fmt.Sprintf("Total with edges     : %d\n", sum2))
+	b.WriteString(fmt.Sprintf("Total with corners   : %d\n", sum2))
 	return b.String()
 }
 
